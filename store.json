@@ -1,0 +1,16 @@
+{
+  "name": "MiniRack",
+  "folder": "MiniRack",
+  "desc": "Live server stats from Glances, Beszel or Vantage",
+  "repo": "zakijss/MiniRack",
+  "license": "MIT",
+  "version": "__VERSION__",
+  "zip": "https://github.com/zakijss/MiniRack/releases/download/v__VERSION__/minirack-__VERSION__.zip",
+  "sha256": "__SHA256__",
+  "size": __SIZE__,
+  "strip": "App/",
+  "released": "__RELEASED__",
+  "facts": [
+    "Runs only while open; passwords are encrypted with the device key."
+  ]
+}

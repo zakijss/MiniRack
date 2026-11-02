@@ -1,0 +1,8 @@
+{
+  "refresh_seconds": 5,
+  "sources": [
+    {"type": "glances", "name": "homeserver", "url": "http://homeserver:61208"},
+    {"type": "beszel", "url": "http://homeserver:8090", "user": "readonly@example.com", "secret": "beszel"},
+    {"type": "vantage", "name": "homeserver", "url": "http://homeserver:8106"}
+  ]
+}

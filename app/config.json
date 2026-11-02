@@ -1,0 +1,6 @@
+{
+	"label":	"MiniRack",
+	"icon":	"/mnt/SDCARD/App/MiniRack/icon.png",
+	"launch":	"launch.sh",
+	"description":	"Live stats for your servers"
+}
