@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/hero.jpg" alt="A Miyoo Mini Plus standing next to a laptop and a NAS, showing server stats in MiniRack" width="100%"></p>
+<p align="center"><img src="docs/hero.jpg" alt="A smoked black Miyoo Mini Plus on a stand showing server stats in MiniRack, on an oak console in front of a sunlit balcony door, with two more handhelds lying beside it" width="100%"></p>
 
 [![CI](https://github.com/zakijss/MiniRack/actions/workflows/ci.yml/badge.svg)](https://github.com/zakijss/MiniRack/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/zakijss/MiniRack)](https://github.com/zakijss/MiniRack/releases)
@@ -15,7 +15,7 @@ Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyo
 - Passwords are kept on the card only encrypted, with the device key.
 
 
-<p align="center"><img src="docs/desk.jpg" alt="MiniRack running on a Miyoo Mini Plus lying on a desk" width="100%"></p>
+<p align="center"><img src="docs/desk.jpg" alt="Two Miyoo Mini Plus handhelds lying on a desk, running MiniRack and MiniRadar" width="100%"></p>
 
 ## Using it
 
