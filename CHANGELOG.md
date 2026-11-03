@@ -6,6 +6,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-03
+
+### Fixed
+
+- A very long server uptime no longer shows as a wrong or negative number on the device.
+
 ## [1.0.1] - 2026-11-02
 
 ### Fixed
@@ -18,6 +24,7 @@ All notable changes are listed here. The format follows
 
 - The first release: Glances, Beszel and Vantage sources, server cards and a detail page per machine, and settings for °C or °F, sorting the machines and hiding the ones that are down.
 
-[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/zakijss/MiniRack/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zakijss/MiniRack/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zakijss/MiniRack/releases/tag/v1.0.0

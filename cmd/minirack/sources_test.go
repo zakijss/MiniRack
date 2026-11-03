@@ -20,6 +20,7 @@ func TestTrimUptime(t *testing.T) {
 		{"4:05:06", "4h 05m"},
 		{"0:07", "0h 07m"},
 		{"12 days", "12d 0h"},
+		{"30000 days, 1:00:00", "30000d 1h"}, // overflows int32 if summed as int
 		{"", "0h 00m"},
 		{"soon", "soon"}, // unknown: shown as given
 		{"day", "day"},

@@ -299,7 +299,8 @@ func trimUptime(u string) string {
 			return u
 		}
 	}
-	return fmtSecs(float64(days*86400 + h*3600 + m*60 + sec))
+	// in float64: days*86400 overflows a 32-bit int past ~68 years
+	return fmtSecs(float64(days)*86400 + float64(h)*3600 + float64(m)*60 + float64(sec))
 }
 
 func fmtSecs(sec float64) string {
