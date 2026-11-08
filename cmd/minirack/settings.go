@@ -185,7 +185,7 @@ func editSource(scr *ui.Screen, input <-chan ui.Event, dir string, cfg *Settings
 			}
 			cfg.Sources = append(cfg.Sources[:i], cfg.Sources[i+1:]...)
 			if err := saveSettings(dir, *cfg); err != nil {
-				scr.Notice(input, "Couldn't save", err.Error())
+				scr.Notice(input, "Couldn't save", err.Error()+". Check that the card has free space.")
 			}
 		}
 	}
@@ -403,7 +403,7 @@ func manageSources(scr *ui.Screen, input <-chan ui.Event, dir string, cfg *Setti
 				change(cfg, r, step)
 				if err := saveSettings(dir, *cfg); err != nil {
 					*cfg = old
-					scr.Notice(input, "Couldn't save", err.Error())
+					scr.Notice(input, "Couldn't save", err.Error()+". Check that the card has free space.")
 				}
 				continue
 			}

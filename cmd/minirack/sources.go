@@ -159,7 +159,8 @@ func (g *glances) get(path string, out any) error {
 				return err
 			}
 		}
-		return errors.New("no Glances API at this URL")
+		//lint:ignore ST1005 shown on screen as a sentence
+		return errors.New("No Glances API at this address. Check that it runs glances -w.")
 	}
 	return getJSON("GET", base+g.api+path, nil, nil, out)
 }
@@ -614,7 +615,7 @@ func (v *vantage) Fetch() []System {
 		p := st.Peers[n]
 		ps := System{Name: n, Source: "vantage", Up: p.Fresh, CPU: p.CPU, Load: p.Load, Uptime: fmtSecs(p.Uptime)}
 		if !p.Fresh {
-			ps.Err = "no recent data"
+			ps.Err = "No recent data."
 		}
 		if p.MemTotal > 0 {
 			ps.Mem = (p.MemTotal - p.MemAvail) / p.MemTotal * 100

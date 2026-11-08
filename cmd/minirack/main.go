@@ -107,7 +107,7 @@ func main() {
 	for {
 		cfg, err := loadSettings(dir)
 		if err != nil {
-			scr.Message("MiniRack", err.Error(), ui.Hint{Button: "B", Label: "Exit"})
+			scr.Message("MiniRack", err.Error()+". Fix or delete settings.json in App/MiniRack, then open MiniRack again.", ui.Hint{Button: "B", Label: "Exit"})
 			waitExit(input)
 			return
 		}
