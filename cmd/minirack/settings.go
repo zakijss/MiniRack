@@ -214,7 +214,7 @@ const (
 var (
 	intervals = []int{2, 5, 10, 30, 60}
 	sorts     = []struct{ id, label string }{
-		{"", "As listed"}, {"name", "Name"}, {"cpu", "CPU"}, {"memory", "Memory"}, {"status", "Status"},
+		{"", "As listed"}, {"name", "Name"}, {"cpu", "CPU"}, {"memory", "Memory"}, {"load", "Load"}, {"status", "Status"},
 	}
 )
 
@@ -319,14 +319,20 @@ func arrange(all []System, cfg Settings) (shown []System, hidden int) {
 		}
 		shown = append(shown, x)
 	}
-	// value is what the CPU and memory orders compare; machines that are
+	// value is what the CPU, memory and load orders compare; machines that are
 	// down have no reading and go last.
 	value := func(x System) float64 {
 		if !x.Up {
 			return -1
 		}
-		if cfg.Sort == "memory" {
+		switch cfg.Sort {
+		case "memory":
 			return x.Mem
+		case "load":
+			if len(x.Load) == 0 {
+				return 0
+			}
+			return x.Load[0]
 		}
 		return x.CPU
 	}
@@ -335,7 +341,7 @@ func arrange(all []System, cfg Settings) (shown []System, hidden int) {
 		sort.SliceStable(shown, func(i, j int) bool {
 			return strings.ToLower(shown[i].Name) < strings.ToLower(shown[j].Name)
 		})
-	case "cpu", "memory":
+	case "cpu", "memory", "load":
 		sort.SliceStable(shown, func(i, j int) bool { return value(shown[i]) > value(shown[j]) })
 	case "status":
 		sort.SliceStable(shown, func(i, j int) bool { return statusRank(shown[i]) < statusRank(shown[j]) })

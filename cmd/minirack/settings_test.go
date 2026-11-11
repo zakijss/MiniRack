@@ -65,7 +65,7 @@ func TestSettingsChange(t *testing.T) {
 	manageSources(scr, presses(
 		ui.Down, ui.Right, // refresh 10 s
 		ui.Down, ui.A, // °F
-		ui.Down, ui.Left, ui.Left, // sort: Status, then Memory
+		ui.Down, ui.Left, ui.Left, ui.Left, // sort: Status, Load, then Memory
 		ui.Down, ui.A, // hide down machines
 		ui.B), dir, &cfg, nil)
 	want := Settings{RefreshSeconds: 10, TempUnit: "F", Sort: "memory", HideDown: true}
@@ -99,7 +99,7 @@ func TestSortCycles(t *testing.T) {
 		change(&cfg, setSort, 1)
 		seen = append(seen, sortLabel(cfg.Sort))
 	}
-	if want := []string{"Name", "CPU", "Memory", "Status", "As listed"}; !reflect.DeepEqual(seen, want) {
+	if want := []string{"Name", "CPU", "Memory", "Load", "Status", "As listed"}; !reflect.DeepEqual(seen, want) {
 		t.Errorf("sort steps %v, want %v", seen, want)
 	}
 	change(&cfg, setSort, -1)
@@ -119,6 +119,7 @@ func TestArrange(t *testing.T) {
 		{Settings{Sort: "name"}, []string{"backup-box", "homeserver", "laptop", "media-server-02", "nas", "Vault"}, 0},
 		{Settings{Sort: "cpu"}, []string{"media-server-02", "homeserver", "nas", "backup-box", "laptop", "Vault"}, 0},
 		{Settings{Sort: "memory"}, []string{"media-server-02", "homeserver", "backup-box", "nas", "laptop", "Vault"}, 0},
+		{Settings{Sort: "load"}, []string{"media-server-02", "homeserver", "backup-box", "nas", "laptop", "Vault"}, 0},
 		{Settings{Sort: "status"}, []string{"Vault", "laptop", "backup-box", "homeserver", "media-server-02", "nas"}, 0},
 		// a refused login stays: it needs fixing in Settings
 		{Settings{HideDown: true}, []string{"homeserver", "media-server-02", "backup-box", "nas", "Vault"}, 1},
@@ -163,5 +164,37 @@ func TestSelectionFollowsMachine(t *testing.T) {
 	}
 	if i := find(after, "gone/box", 2); i != 2 {
 		t.Errorf("a machine no longer listed moved the selection to %d", i)
+	}
+}
+
+// A hot or overloaded machine shows its temperature and load in orange or
+// red; load counts only when the thread count is known.
+func TestHeatColours(t *testing.T) {
+	for _, c := range []struct {
+		temp float64
+		want any
+	}{{47, ui.Text}, {75, ui.Warn}, {89, ui.Warn}, {90, ui.Bad}} {
+		if got := tempColor(c.temp); got != c.want {
+			t.Errorf("tempColor(%v) = %v", c.temp, got)
+		}
+	}
+	for _, c := range []struct {
+		x    System
+		want any
+	}{
+		{System{Load: []float64{13}}, ui.Text}, // threads unknown
+		{System{Load: []float64{3}, Cores: 2, Threads: 4}, ui.Text},
+		{System{Load: []float64{4}, Cores: 2, Threads: 4}, ui.Warn},
+		{System{Load: []float64{8}, Threads: 4}, ui.Bad},
+	} {
+		if got := loadColor(c.x); got != c.want {
+			t.Errorf("loadColor(%+v) = %v", c.x, got)
+		}
+	}
+	if got := statsColor(sample()[0]); got != ui.Muted {
+		t.Errorf("a quiet machine's line is %v", got)
+	}
+	if got := statsColor(System{Temp: 92, Load: []float64{1}, Threads: 4}); got != ui.Bad {
+		t.Errorf("a hot machine's line is %v", got)
 	}
 }

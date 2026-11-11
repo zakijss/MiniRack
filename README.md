@@ -9,8 +9,8 @@
 Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyoo Mini Plus. Part of [MiniDeck](https://github.com/zakijss/MiniDeck).
 
 - Sources: [Glances](https://github.com/nicolargo/glances) (one machine), a [Beszel](https://beszel.dev) hub (every machine it watches) and [Vantage](https://github.com/zakijss/Vantage).
-- A card per machine, a detail page with every disk, sensor and service, and why a machine is down.
-- Settings for the refresh interval, °C or °F, the order of the machines (name, CPU, memory or status) and hiding machines that are down.
+- A card per machine, a detail page with every disk, sensor and service, and why a machine is down. A hot or overloaded machine shows its temperature and load in orange (from 75 °C, or a load of 1 per thread) or red (from 90 °C, or 2 per thread).
+- Settings for the refresh interval, °C or °F, the order of the machines (name, CPU, memory, load or status) and hiding machines that are down.
 - Servers on your tailnet through [MiniScale](https://github.com/zakijss/MiniScale), or on your home network directly.
 - Passwords are kept on the card only encrypted, with the device key.
 
@@ -19,7 +19,7 @@ Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyo
 
 ## Using it
 
-The first start asks for a source: type the address on the on-screen keyboard or pick a device from your tailnet; **Save** tests the connection first. **Y** opens the sources and settings later. On the overview, **A** opens a machine and **X** refreshes; on a machine's page, **L1**/**R1** step to the other machines. On the overview, **SELECT** changes the look. Use a read-only Beszel user.
+The first start asks for a source: type the address on the on-screen keyboard or pick a device from your tailnet; **Save** tests the connection first. **Y** opens the sources and settings later. On the overview, **A** opens a machine and **X** refreshes; on a machine's page, **L1**/**R1** step to the other machines, **Up**/**Down** scroll and **X** refreshes too. The selected machine stays selected after Settings. On the overview, **SELECT** changes the look. Use a read-only Beszel user.
 
 ## Install
 

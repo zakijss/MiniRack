@@ -31,7 +31,7 @@ type Settings struct {
 	// TempUnit is "C" (the default) or "F".
 	TempUnit string `json:"temp_unit,omitempty"`
 	// Sort orders the machines: "" (as the sources list them), "name",
-	// "cpu", "memory" or "status".
+	// "cpu", "memory", "load" or "status".
 	Sort string `json:"sort,omitempty"`
 	// HideDown leaves out machines that don't answer (default off).
 	HideDown bool `json:"hide_down,omitempty"`
@@ -104,6 +104,7 @@ func main() {
 	if err != nil {
 		log.Printf("secrets: %v", err)
 	}
+	selKey := "" // the selected machine, kept while Settings is open
 	for {
 		cfg, err := loadSettings(dir)
 		if err != nil {
@@ -117,7 +118,7 @@ func main() {
 			}
 			continue
 		}
-		if !dashboard(scr, input, cfg, sec) {
+		if !dashboard(scr, input, cfg, sec, &selKey) {
 			return
 		}
 		manageSources(scr, input, dir, &cfg, sec)
@@ -125,8 +126,9 @@ func main() {
 }
 
 // dashboard shows the machines until the user exits (false) or opens
-// settings with Y (true).
-func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[string]string) bool {
+// settings with Y (true). selKey is the selected machine, which it keeps
+// up to date.
+func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[string]string, selKey *string) bool {
 	var fetchers []fetcher
 	for _, c := range cfg.Sources {
 		switch c.Type {
@@ -220,7 +222,6 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 	}()
 
 	sel, detail, scroll := 0, false, 0
-	selKey := "" // the selected machine, kept when a refresh reorders them
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
 	marquee := ui.TickerClock() // the now-playing strip's frames
@@ -231,7 +232,7 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 		scr.SetTicker(ui.ReadNow())
 		st.mu.Lock()
 		systems, hidden, updated, busy := st.systems, st.hidden, st.updated, st.busy
-		sel = find(systems, selKey, sel)
+		sel = find(systems, *selKey, sel)
 		var hist []float64
 		var span time.Duration
 		if sel < len(systems) {
@@ -332,7 +333,7 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 			skipDraw = true
 		}
 		if sel < len(systems) {
-			selKey = machineKey(systems[sel])
+			*selKey = machineKey(systems[sel])
 		}
 	}
 }
@@ -394,11 +395,17 @@ func drawOverview(s *ui.Screen, systems []System, sel int, updated time.Time, bu
 		sub = fmt.Sprintf("%d of %d up · %d hidden · %s", up, len(systems)+hidden, hidden, ago(updated))
 	}
 	if len(systems) == 0 {
-		top := s.StaticFrame("MiniRack", sub, ui.Hint{Button: "Y", Label: "Settings"}, ui.AppearanceHint, ui.Hint{Button: "B", Label: "Exit"})
-		if hidden > 0 {
-			y := top + 120
+		top := s.StaticFrame("MiniRack", sub, ui.Hint{Button: "X", Label: "Refresh"}, ui.Hint{Button: "Y", Label: "Settings"}, ui.AppearanceHint, ui.Hint{Button: "B", Label: "Exit"})
+		y := top + 120
+		switch {
+		case hidden > 0:
 			s.TextCenter(ui.W/2, y, "No machine is answering", ui.Heading, ui.Text)
 			s.TextCenter(ui.W/2, y+ui.LineHeight(ui.Heading)+10, "Settings › Down machines shows them", ui.Body, ui.Muted)
+			return
+		case !updated.IsZero():
+			// read, but the sources list no machine (a new Beszel hub)
+			s.TextCenter(ui.W/2, y, "No machines yet", ui.Heading, ui.Text)
+			s.TextCenter(ui.W/2, y+ui.LineHeight(ui.Heading)+10, "Your sources list none. X reads them again.", ui.Body, ui.Muted)
 			return
 		}
 		s.Loading(210, "Reading your servers…")
@@ -426,6 +433,50 @@ func drawOverview(s *ui.Screen, systems []System, sel int, updated time.Time, bu
 			s.Circle(float64(ui.W/2-(rows-1)*7+r*14), cy, 3, c)
 		}
 	}
+}
+
+// tempColor marks a hot machine: orange from 75 °C, red from 90 °C.
+func tempColor(c float64) color.RGBA {
+	switch {
+	case c >= 90:
+		return ui.Bad
+	case c >= 75:
+		return ui.Warn
+	}
+	return ui.Text
+}
+
+// loadColor marks a busy machine by its load per CPU thread: orange from
+// 1 (every thread busy, work waiting), red from 2. Without a thread count
+// the load can't be judged.
+func loadColor(x System) color.RGBA {
+	n := max(x.Cores, x.Threads)
+	if len(x.Load) == 0 || n == 0 {
+		return ui.Text
+	}
+	switch l := x.Load[0] / float64(n); {
+	case l >= 2:
+		return ui.Bad
+	case l >= 1:
+		return ui.Warn
+	}
+	return ui.Text
+}
+
+// statsColor is the colour of a card's load and temperature line: the
+// worse of the two, else the usual grey.
+func statsColor(x System) color.RGBA {
+	t, l := ui.Text, loadColor(x)
+	if x.Temp > 0 {
+		t = tempColor(x.Temp)
+	}
+	switch {
+	case t == ui.Bad || l == ui.Bad:
+		return ui.Bad
+	case t == ui.Warn || l == ui.Warn:
+		return ui.Warn
+	}
+	return ui.Muted
 }
 
 func statusColor(x System) color.RGBA {
@@ -563,7 +614,7 @@ func drawCard(s *ui.Screen, r image.Rectangle, x System, selected, f bool) {
 		cx := r.Min.X + 52 + i*95
 		s.Gauge(cx, cy, 30, g.v, g.l)
 	}
-	s.Text(r.Min.X+18, r.Max.Y-26, cardStats(x, f), ui.Caps, ui.Muted)
+	s.Text(r.Min.X+18, r.Max.Y-26, cardStats(x, f), ui.Caps, statsColor(x))
 }
 
 func human(b float64) string {
@@ -637,11 +688,11 @@ func shortDur(d time.Duration) string {
 	return fmt.Sprintf("%.0f s", d.Seconds())
 }
 
-// tile draws a small labelled value.
-func tile(s *ui.Screen, r image.Rectangle, label, value string) {
+// tile draws a small labelled value in colour c.
+func tile(s *ui.Screen, r image.Rectangle, label, value string, c color.RGBA) {
 	s.Panel(r, 16)
 	s.Text(r.Min.X+14, r.Min.Y+9, label, ui.Caps, ui.Muted)
-	s.Text(r.Min.X+14, r.Max.Y-9-ui.LineHeight(ui.Heading), ui.Fit(ui.Heading, value, r.Dx()-28), ui.Heading, ui.Text)
+	s.Text(r.Min.X+14, r.Max.Y-9-ui.LineHeight(ui.Heading), ui.Fit(ui.Heading, value, r.Dx()-28), ui.Heading, c)
 }
 
 func rate(b float64) string {
@@ -693,7 +744,7 @@ func drawDetail(s *ui.Screen, x System, hist []float64, span time.Duration, scro
 			s.Text(m+4, y, line, ui.Body, ui.Muted)
 			y += ui.LineHeight(ui.Body)
 		}
-		s.Footer(ui.Hint{Button: "L1/R1", Label: "Other servers"}, ui.Hint{Button: "B", Label: "Back"})
+		s.Footer(ui.Hint{Button: "L1/R1", Label: "Other servers"}, ui.Hint{Button: "X", Label: "Refresh"}, ui.Hint{Button: "B", Label: "Back"})
 		return
 	}
 
@@ -706,7 +757,7 @@ func drawDetail(s *ui.Screen, x System, hist []float64, span time.Duration, scro
 	chart(s, image.Rect(276, cardTop, ui.W-m, cardTop+144), hist, span)
 
 	// Tiles: load, uptime, temperature.
-	load, up, temp := "–", "–", "–"
+	load, up, temp, tc := "–", "–", "–", ui.Text
 	if len(x.Load) >= 3 {
 		load = fmt.Sprintf("%.2f  %.2f  %.2f", x.Load[0], x.Load[1], x.Load[2])
 	}
@@ -714,12 +765,12 @@ func drawDetail(s *ui.Screen, x System, hist []float64, span time.Duration, scro
 		up = x.Uptime
 	}
 	if x.Temp > 0 {
-		temp = degrees(x.Temp, f, " ")
+		temp, tc = degrees(x.Temp, f, " "), tempColor(x.Temp)
 	}
 	ty := cardTop + 154
-	tile(s, image.Rect(m, ty, 264, ty+58), "LOAD", load)
-	tile(s, image.Rect(276, ty, 450, ty+58), "UPTIME", up)
-	tile(s, image.Rect(462, ty, ui.W-m, ty+58), "TEMPERATURE", temp)
+	tile(s, image.Rect(m, ty, 264, ty+58), "LOAD", load, loadColor(x))
+	tile(s, image.Rect(276, ty, 450, ty+58), "UPTIME", up, ui.Text)
+	tile(s, image.Rect(462, ty, ui.W-m, ty+58), "TEMPERATURE", temp, tc)
 
 	// Below: everything else, scrollable.
 	const lx, rx = 26, ui.W - 26 // text columns, inside the cards' edges
@@ -822,7 +873,7 @@ func drawDetail(s *ui.Screen, x System, hist []float64, span time.Duration, scro
 		pos := listTop + (listBottom-listTop-h)**scroll/max(1, len(rows)-fit)
 		s.RoundRectAlpha(image.Rect(ui.W-8, pos, ui.W-5, pos+h), 2, ui.Text, 0.4)
 	}
-	hints := []ui.Hint{{Button: "L1/R1", Label: "Other servers"}}
+	hints := []ui.Hint{{Button: "L1/R1", Label: "Other servers"}, {Button: "X", Label: "Refresh"}}
 	if len(rows) > fit {
 		hints = append(hints, ui.Hint{Button: "UP/DOWN", Label: "Scroll"})
 	}

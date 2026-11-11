@@ -66,7 +66,7 @@ func TestSettingsOpenAppearance(t *testing.T) {
 func TestSelectOpensAppearance(t *testing.T) {
 	scr, path := lookScreen(t)
 	start := ui.CurrentAppearance()
-	if dashboard(scr, presses(ui.Select, ui.Right, ui.B, ui.B), Settings{RefreshSeconds: 5}, nil) {
+	if dashboard(scr, presses(ui.Select, ui.Right, ui.B, ui.B), Settings{RefreshSeconds: 5}, nil, new(string)) {
 		t.Error("B on the dashboard should exit, not open settings")
 	}
 	wantLookChanged(t, start, path)

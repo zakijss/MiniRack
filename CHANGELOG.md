@@ -6,6 +6,18 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Settings › Sort machines has Load: the busiest machine first, by its 1-minute load.
+- A hot or overloaded machine shows its temperature and load in orange or red, on its card and on its page. Orange from 75 °C or a load of 1 per CPU thread, red from 90 °C or 2.
+- When the sources list no machine, the overview says so and that X reads them again, instead of "Reading your servers…".
+
+### Changed
+
+- A machine's page shows X Refresh in the footer.
+- The selected machine stays selected after Settings.
+- Go 1.27.4 and updated dependencies.
+
 ## [1.0.3] - 2026-11-08
 
 ### Changed
