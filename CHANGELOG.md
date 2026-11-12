@@ -6,6 +6,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-12
+
+### Changed
+
+- Reaches the WireGuard and NetBird networks MiniScale 1.2 can join, through its proxy (MiniDeck 1.1.0).
+
 ## [1.1.0] - 2026-11-12
 
 ### Added
@@ -48,7 +54,8 @@ All notable changes are listed here. The format follows
 
 - The first release: Glances, Beszel and Vantage sources, server cards and a detail page per machine, and settings for °C or °F, sorting the machines and hiding the ones that are down.
 
-[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/zakijss/MiniRack/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakijss/MiniRack/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/zakijss/MiniRack/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zakijss/MiniRack/compare/v1.0.1...v1.0.2
