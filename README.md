@@ -11,7 +11,7 @@ Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyo
 - Sources: [Glances](https://github.com/nicolargo/glances) (one machine), a [Beszel](https://beszel.dev) hub (every machine it watches) and [Vantage](https://github.com/zakijss/Vantage).
 - A card per machine, a detail page with every disk, sensor and service, and why a machine is down. A hot or overloaded machine shows its temperature and load in orange (from 75 °C, or a load of 1 per thread) or red (from 90 °C, or 2 per thread).
 - Settings for the refresh interval, °C or °F, the order of the machines (name, CPU, memory, load or status) and hiding machines that are down.
-- Servers on your tailnet through [MiniScale](https://github.com/zakijss/MiniScale), or on your home network directly.
+- Servers on your private network (Tailscale, Headscale, WireGuard or NetBird) through [MiniScale](https://github.com/zakijss/MiniScale), or on your home network directly.
 - Passwords are kept on the card only encrypted, with the device key.
 
 
