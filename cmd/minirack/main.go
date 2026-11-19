@@ -46,12 +46,48 @@ type state struct {
 	hidden  int      // machines left out (Settings › Down machines)
 	updated time.Time
 	busy    bool
-	history map[string][]float64 // CPU % per machine, oldest first
 
 	// the last good reading of each source, shown (marked stale) when a
 	// refresh fails for a moment: one timeout shouldn't blank a card
 	good   map[int][]System
 	goodAt map[int]time.Time
+}
+
+// cpuHistory is each machine's CPU %, oldest first, for the chart of a
+// source without a history of its own. It outlives the overview, so a
+// visit to Settings doesn't empty the charts. The chart's span is counted
+// in samples, so a new refresh interval, or a gap of more than a few
+// refreshes, starts it afresh.
+type cpuHistory struct {
+	mu    sync.Mutex
+	every int // the refresh interval, seconds
+	at    time.Time
+	m     map[string][]float64
+}
+
+func (h *cpuHistory) add(all []System, every int) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.m == nil || every != h.every || time.Since(h.at) > 3*time.Duration(every)*time.Second+15*time.Second {
+		h.m, h.every = map[string][]float64{}, every
+	}
+	h.at = time.Now()
+	for _, x := range all {
+		if x.Up && x.Stale.IsZero() {
+			k := machineKey(x)
+			v := append(h.m[k], x.CPU)
+			if len(v) > 60 {
+				v = v[len(v)-60:]
+			}
+			h.m[k] = v
+		}
+	}
+}
+
+func (h *cpuHistory) get(key string) []float64 {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return append([]float64(nil), h.m[key]...)
 }
 
 // failed reports whether a source returned only errors (but not a refused
@@ -105,6 +141,7 @@ func main() {
 		log.Printf("secrets: %v", err)
 	}
 	selKey := "" // the selected machine, kept while Settings is open
+	hist := &cpuHistory{}
 	for {
 		cfg, err := loadSettings(dir)
 		if err != nil {
@@ -118,7 +155,7 @@ func main() {
 			}
 			continue
 		}
-		if !dashboard(scr, input, cfg, sec, &selKey) {
+		if !dashboard(scr, input, cfg, sec, &selKey, hist) {
 			return
 		}
 		manageSources(scr, input, dir, &cfg, sec)
@@ -127,8 +164,8 @@ func main() {
 
 // dashboard shows the machines until the user exits (false) or opens
 // settings with Y (true). selKey is the selected machine, which it keeps
-// up to date.
-func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[string]string, selKey *string) bool {
+// up to date; hist gathers the CPU charts.
+func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[string]string, selKey *string, hist *cpuHistory) bool {
 	var fetchers []fetcher
 	for _, c := range cfg.Sources {
 		switch c.Type {
@@ -192,20 +229,8 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 		}
 		shown, hidden := arrange(all, cfg)
 		st.systems, st.hidden, st.updated, st.busy = shown, hidden, time.Now(), false
-		if st.history == nil {
-			st.history = map[string][]float64{}
-		}
-		for _, x := range all {
-			if x.Up && x.Stale.IsZero() {
-				k := machineKey(x)
-				h := append(st.history[k], x.CPU)
-				if len(h) > 60 {
-					h = h[len(h)-60:]
-				}
-				st.history[k] = h
-			}
-		}
 		st.mu.Unlock()
+		hist.add(all, cfg.RefreshSeconds)
 		poke()
 	}
 	stop := make(chan struct{})
@@ -233,24 +258,24 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 		st.mu.Lock()
 		systems, hidden, updated, busy := st.systems, st.hidden, st.updated, st.busy
 		sel = find(systems, *selKey, sel)
-		var hist []float64
+		st.mu.Unlock()
+		var chartHist []float64
 		var span time.Duration
 		if sel < len(systems) {
 			x := systems[sel]
 			if len(x.History) > 1 { // the source's own history
-				hist, span = x.History, x.HistSpan
+				chartHist, span = x.History, x.HistSpan
 			} else {
-				hist = append(hist, st.history[machineKey(x)]...)
-				span = time.Duration(max(0, len(hist)-1)*cfg.RefreshSeconds) * time.Second
+				chartHist = hist.get(machineKey(x))
+				span = time.Duration(max(0, len(chartHist)-1)*cfg.RefreshSeconds) * time.Second
 			}
 		}
-		st.mu.Unlock()
 		if sel >= len(systems) {
 			sel = max(0, len(systems)-1)
 		}
 		if !skipDraw {
 			if detail && len(systems) > 0 {
-				drawDetail(scr, systems[sel], hist, span, &scroll, cfg.fahrenheit())
+				drawDetail(scr, systems[sel], chartHist, span, &scroll, cfg.fahrenheit())
 			} else {
 				detail = false
 				drawOverview(scr, systems, sel, updated, busy, hidden, cfg.fahrenheit())

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/zakijss/minideck/ui"
 )
@@ -196,5 +197,29 @@ func TestHeatColours(t *testing.T) {
 	}
 	if got := statsColor(System{Temp: 92, Load: []float64{1}, Threads: 4}); got != ui.Bad {
 		t.Errorf("a hot machine's line is %v", got)
+	}
+}
+
+// The CPU chart's samples outlive a visit to Settings, but start afresh
+// with a new refresh interval or after a long gap.
+func TestCPUHistory(t *testing.T) {
+	h := &cpuHistory{}
+	key := machineKey(sample()[0])
+	h.add(sample(), 5)
+	h.add(sample(), 5)
+	if got := h.get(key); len(got) != 2 || got[1] != 7.5 {
+		t.Fatalf("history %v", got)
+	}
+	if got := h.get(machineKey(sample()[2])); len(got) != 0 {
+		t.Errorf("a stale reading was kept: %v", got)
+	}
+	h.add(sample(), 10)
+	if got := h.get(key); len(got) != 1 {
+		t.Errorf("after a new interval: %v", got)
+	}
+	h.at = time.Now().Add(-time.Hour)
+	h.add(sample(), 10)
+	if got := h.get(key); len(got) != 1 {
+		t.Errorf("after an hour away: %v", got)
 	}
 }
