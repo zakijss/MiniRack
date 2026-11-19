@@ -322,6 +322,7 @@ type beszel struct {
 	password string
 	mu       sync.Mutex
 	token    string
+	tokenAt  time.Time
 
 	// Beszel saves a stats record per system each minute: the last hour of
 	// them gives the CPU chart and the detail (memory, network, disks,
@@ -352,6 +353,9 @@ type beszelStats struct {
 
 const gib, mib = 1 << 30, 1 << 20
 
+// tokenLife is how long a Beszel login is used before logging in again.
+const tokenLife = time.Hour
+
 func (b *beszel) auth() map[string]string { return map[string]string{"Authorization": b.token} }
 
 // get does an authenticated GET, logging in again if the token expired.
@@ -377,7 +381,7 @@ func (b *beszel) login() error {
 	if err != nil {
 		return fmt.Errorf("login: %w", err)
 	}
-	b.token = r.Token
+	b.token, b.tokenAt = r.Token, time.Now()
 	return nil
 }
 
@@ -391,7 +395,10 @@ func (b *beszel) Fetch() []System {
 	if b.c.User == "" || b.password == "" {
 		return []System{down(label, "beszel", loginErr("No login yet. Press Y to add the email and password."))}
 	}
-	if b.token == "" {
+	// Logged in again each hour, well before the hub's login expires:
+	// PocketBase takes an expired token as no login at all, and lists no
+	// machines rather than refusing.
+	if b.token == "" || time.Since(b.tokenAt) > tokenLife {
 		if err := b.login(); err != nil {
 			return []System{down(label, "beszel", err)}
 		}

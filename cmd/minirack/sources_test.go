@@ -223,3 +223,35 @@ func TestClampLines(t *testing.T) {
 		t.Errorf("short input changed: %q", got)
 	}
 }
+
+// A Beszel login is used for an hour, then renewed before the hub's
+// expires (an expired one lists no machines rather than being refused).
+func TestBeszelLoginRenewed(t *testing.T) {
+	var logins atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/collections/users/auth-with-password":
+			logins.Add(1)
+			w.Write([]byte(`{"token": "T"}`))
+		case "/api/collections/systems/records":
+			w.Write([]byte(`{"items": [{"id": "a", "name": "box", "status": "up"}]}`))
+		default:
+			w.Write([]byte(`{"items": []}`))
+		}
+	}))
+	defer srv.Close()
+	client = srv.Client()
+	b := &beszel{c: SourceConf{URL: srv.URL, User: "u"}, password: "p"}
+	b.Fetch()
+	b.Fetch()
+	if n := logins.Load(); n != 1 {
+		t.Fatalf("%d logins for two refreshes, want 1", n)
+	}
+	b.tokenAt = time.Now().Add(-tokenLife - time.Minute)
+	if s := b.Fetch(); len(s) != 1 || !s[0].Up {
+		t.Fatalf("after renewing: %+v", s)
+	}
+	if n := logins.Load(); n != 2 {
+		t.Errorf("%d logins after an hour, want 2", n)
+	}
+}
