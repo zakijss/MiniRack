@@ -6,6 +6,17 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-19
+
+### Added
+
+- On the overview, L1 and R1 move a screen of four machines at a time.
+
+### Fixed
+
+- The CPU chart of a Vantage machine no longer starts again after a visit to Settings.
+- A Beszel hub left open for days keeps listing its machines: MiniRack logs in again every hour, before the hub's login expires.
+
 ## [1.1.1] - 2026-11-12
 
 ### Changed
@@ -54,7 +65,8 @@ All notable changes are listed here. The format follows
 
 - The first release: Glances, Beszel and Vantage sources, server cards and a detail page per machine, and settings for °C or °F, sorting the machines and hiding the ones that are down.
 
-[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/zakijss/MiniRack/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zakijss/MiniRack/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/zakijss/MiniRack/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakijss/MiniRack/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/zakijss/MiniRack/compare/v1.0.2...v1.0.3
