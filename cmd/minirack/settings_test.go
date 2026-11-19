@@ -200,6 +200,25 @@ func TestHeatColours(t *testing.T) {
 	}
 }
 
+// The arrows move by a card or a row and stop at the ends; L1 and R1 move
+// by a screen of four cards.
+func TestStep(t *testing.T) {
+	for _, c := range []struct {
+		sel, n int
+		b      ui.Button
+		want   int
+	}{
+		{0, 5, ui.Right, 1}, {4, 5, ui.Right, 4}, {0, 5, ui.Left, 0},
+		{1, 5, ui.Down, 3}, {3, 5, ui.Down, 3}, {3, 5, ui.Up, 1}, {1, 5, ui.Up, 1},
+		{1, 12, ui.R1, 5}, {9, 12, ui.R1, 11}, {9, 12, ui.L1, 5}, {2, 12, ui.L1, 0},
+		{0, 0, ui.R1, 0},
+	} {
+		if got := step(c.sel, c.n, c.b); got != c.want {
+			t.Errorf("step(%d, %d, %v) = %d, want %d", c.sel, c.n, c.b, got, c.want)
+		}
+	}
+}
+
 // The CPU chart's samples outlive a visit to Settings, but start afresh
 // with a new refresh interval or after a long gap.
 func TestCPUHistory(t *testing.T) {

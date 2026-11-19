@@ -319,32 +319,29 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 				}
 			case ui.X:
 				go refresh()
-			case ui.Up:
-				if detail {
+			case ui.Up, ui.Down:
+				switch {
+				case !detail:
+					sel = step(sel, len(systems), ev.Button)
+				case ev.Button == ui.Up:
 					scroll = max(0, scroll-1)
-				} else if sel >= 2 {
-					sel -= 2
-				}
-			case ui.Down:
-				if detail {
+				default:
 					scroll++
-				} else if sel+2 < len(systems) {
-					sel += 2
 				}
-			case ui.Left:
-				if !detail && sel > 0 {
-					sel--
-				}
-			case ui.Right:
-				if !detail && sel+1 < len(systems) {
-					sel++
+			case ui.Left, ui.Right:
+				if !detail {
+					sel = step(sel, len(systems), ev.Button)
 				}
 			case ui.L1:
-				if detail && sel > 0 {
+				if !detail {
+					sel = step(sel, len(systems), ev.Button)
+				} else if sel > 0 {
 					sel, scroll = sel-1, 0
 				}
 			case ui.R1:
-				if detail && sel+1 < len(systems) {
+				if !detail {
+					sel = step(sel, len(systems), ev.Button)
+				} else if sel+1 < len(systems) {
 					sel, scroll = sel+1, 0
 				}
 			}
@@ -361,6 +358,23 @@ func dashboard(scr *ui.Screen, input <-chan ui.Event, cfg Settings, sec map[stri
 			*selKey = machineKey(systems[sel])
 		}
 	}
+}
+
+// step moves the overview's selection among n cards, two to a row: the
+// arrows by a card or a row (not past the ends), L1 and R1 by a screen of
+// four (stopping at the first or last).
+func step(sel, n int, b ui.Button) int {
+	d := map[ui.Button]int{ui.Left: -1, ui.Right: 1, ui.Up: -2, ui.Down: 2}[b]
+	switch b {
+	case ui.L1:
+		return max(0, sel-4)
+	case ui.R1:
+		return max(0, min(n-1, sel+4))
+	}
+	if t := sel + d; t >= 0 && t < n {
+		return t
+	}
+	return sel
 }
 
 // machineKey names a machine across refreshes.

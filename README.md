@@ -19,7 +19,7 @@ Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyo
 
 ## Using it
 
-The first start asks for a source: type the address on the on-screen keyboard or pick a device from your tailnet; **Save** tests the connection first. **Y** opens the sources and settings later. On the overview, **A** opens a machine and **X** refreshes; on a machine's page, **L1**/**R1** step to the other machines, **Up**/**Down** scroll and **X** refreshes too. The selected machine stays selected after Settings. On the overview, **SELECT** changes the look. Use a read-only Beszel user.
+The first start asks for a source: type the address on the on-screen keyboard or pick a device from your tailnet; **Save** tests the connection first. **Y** opens the sources and settings later. On the overview, **A** opens a machine, **L1**/**R1** move four machines at a time and **X** refreshes; on a machine's page, **L1**/**R1** step to the other machines, **Up**/**Down** scroll and **X** refreshes too. The selected machine stays selected after Settings. On the overview, **SELECT** changes the look. Use a read-only Beszel user.
 
 ## Install
 
