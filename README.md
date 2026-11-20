@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/hero.jpg" alt="A smoked black Miyoo Mini Plus on a stand on a pale stone table with teacups, showing server stats in MiniRack, with a grey one and a white one lying beside it" width="100%"></p>
+<p align="center"><img src="docs/hero.jpg" alt="A smoked black Miyoo Mini Plus on a stand showing server stats in MiniRack, on a worn workbench in an electrical room, with a multimeter, a circuit board, pliers and a grey one lying beside it" width="100%"></p>
 
 [![CI](https://github.com/zakijss/MiniRack/actions/workflows/ci.yml/badge.svg)](https://github.com/zakijss/MiniRack/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/zakijss/MiniRack)](https://github.com/zakijss/MiniRack/releases)
@@ -13,7 +13,7 @@ Live CPU, memory, disk, temperature, load and uptime for your servers, on a Miyo
 - Temperature and load turn orange from 75 °C or a load of 1 per thread, and red from 90 °C or 2 per thread.
 - Servers on your private network (Tailscale, Headscale, WireGuard or NetBird) through [MiniScale](https://github.com/zakijss/MiniScale), or on your home network directly.
 
-<p align="center"><img src="docs/desk.jpg" alt="A smoked black Miyoo Mini Plus on a stand on an oak desk by a keyboard and a mug, showing server stats in MiniRack, with a grey one beside it open at one server" width="100%"></p>
+<p align="center"><img src="docs/desk.jpg" alt="From above: a white Miyoo Mini Plus showing MiniRack's settings and a smoked black one showing one server, on a workbench with a circuit board and pliers" width="100%"></p>
 
 ## Install
 
